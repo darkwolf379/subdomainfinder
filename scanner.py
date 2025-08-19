@@ -116,12 +116,25 @@ class SubdomainScanner:
     
     def _is_valid_subdomain(self, subdomain: str, domain: str) -> bool:
         """Validate if a subdomain is legitimate and should be included"""
-        if not subdomain or not subdomain.endswith(domain):
+        if not subdomain:
             return False
         
         # Remove wildcards
         if subdomain.startswith('*.'):
             subdomain = subdomain[2:]
+        
+        # Must end with the domain
+        if not subdomain.endswith(domain):
+            return False
+        
+        # If it's exactly the domain, that's valid
+        if subdomain == domain:
+            return True
+        
+        # Must have a dot before the domain part (proper subdomain)
+        domain_start = subdomain.rfind(domain)
+        if domain_start > 0 and subdomain[domain_start - 1] != '.':
+            return False
         
         # Basic validation
         if not re.match(r'^[a-zA-Z0-9.-]+$', subdomain):
@@ -240,14 +253,80 @@ class SubdomainScanner:
         except:
             return None
     
+    async def get_hackertarget_subdomains(self, domain: str) -> Set[str]:
+        """Get subdomains from HackerTarget API (free, no key required)"""
+        subdomains = set()
+        
+        try:
+            async with self.semaphore:
+                url = f"https://api.hackertarget.com/hostsearch/?q={domain}"
+                
+                async with self.session.get(url) as response:
+                    if response.status == 200:
+                        text = await response.text()
+                        
+                        # Parse the response (format: subdomain,ip)
+                        for line in text.split('\n'):
+                            if ',' in line:
+                                subdomain = line.split(',')[0].strip().lower()
+                                if self._is_valid_subdomain(subdomain, domain):
+                                    subdomains.add(subdomain)
+                    else:
+                        logging.warning(f"HackerTarget returned status {response.status} for {domain}")
+                        
+        except Exception as e:
+            logging.error(f"Error querying HackerTarget for {domain}: {e}")
+        
+        return subdomains
+    
+    async def get_alienvault_subdomains(self, domain: str) -> Set[str]:
+        """Get subdomains from AlienVault OTX (free, no key required)"""
+        subdomains = set()
+        
+        try:
+            async with self.semaphore:
+                url = f"https://otx.alienvault.com/api/v1/indicators/domain/{domain}/passive_dns"
+                
+                async with self.session.get(url) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        
+                        for record in data.get('passive_dns', []):
+                            subdomain = record.get('hostname', '').lower().strip()
+                            if self._is_valid_subdomain(subdomain, domain):
+                                subdomains.add(subdomain)
+                    else:
+                        logging.warning(f"AlienVault returned status {response.status} for {domain}")
+                        
+        except Exception as e:
+            logging.error(f"Error querying AlienVault for {domain}: {e}")
+        
+        return subdomains
+
     async def scan_domain_fast(self, domain: str) -> Tuple[List[Dict], float]:
-        """Perform fast, comprehensive domain scan"""
+        """Perform fast, comprehensive domain scan with multiple API sources"""
         start_time = time.time()
         
         logging.info(f"Starting fast scan for {domain}")
         
-        # Get subdomains from crt.sh
-        subdomains = await self.get_crtsh_subdomains(domain)
+        # Get subdomains from multiple sources concurrently
+        tasks = [
+            self.get_crtsh_subdomains(domain),
+            self.get_hackertarget_subdomains(domain),
+            self.get_alienvault_subdomains(domain)
+        ]
+        
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # Combine all results
+        all_subdomains = set()
+        for result in results:
+            if isinstance(result, set):
+                all_subdomains.update(result)
+            elif isinstance(result, Exception):
+                logging.error(f"API error: {result}")
+        
+        subdomains = all_subdomains
         
         if not subdomains:
             logging.warning(f"No subdomains found for {domain}")
