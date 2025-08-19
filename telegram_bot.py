@@ -103,35 +103,52 @@ class TelegramNotifier:
         return await self.send_message(message)
     
     async def send_help_message(self) -> bool:
-        """Send help message with available commands"""
-        message = """🤖 <b>Subdomain Monitor Bot Commands</b>
+        """Send comprehensive help message with available commands"""
+        message = """🤖 <b>Subdomain Monitor Bot - Complete Guide</b>
 
-<b>🔍 Monitoring Commands:</b>
-/add &lt;domain&gt; - Add domain to monitor
-/remove &lt;domain&gt; - Remove domain from monitoring
-/scan &lt;domain&gt; - Perform immediate scan
-/scanall - Scan all monitored domains
+<b>🎯 Quick Start:</b>
+1. Add a domain: <code>/add example.com</code>
+2. Start monitoring: <code>/startmon</code>
+3. Get real-time notifications for new subdomains!
 
-<b>📊 Information Commands:</b>
-/list - List all monitored domains
-/stats &lt;domain&gt; - Get domain statistics
-/recent &lt;domain&gt; - Show recent subdomains
-/history &lt;domain&gt; - Show scan history
+<b>🔍 Domain Management:</b>
+<code>/add &lt;domain&gt;</code> - Add domain to monitor list
+<code>/remove &lt;domain&gt;</code> - Remove domain from monitoring
+<code>/list</code> - Show all monitored domains
+<code>/scan &lt;domain&gt;</code> - Perform immediate single scan
+<code>/scanall</code> - Scan all monitored domains
 
-<b>⚙️ Control Commands:</b>
-/start - Start monitoring service
-/stop - Stop monitoring service
-/status - Check service status
-/config - Show current configuration
+<b>📊 Information & Statistics:</b>
+<code>/stats &lt;domain&gt;</code> - Get detailed domain statistics
+<code>/recent &lt;domain&gt;</code> - Show recently found subdomains
+<code>/history &lt;domain&gt;</code> - Show scan history for domain
 
-<b>📱 Examples:</b>
-<code>/add example.com</code>
-<code>/scan google.com</code>
-<code>/stats facebook.com</code>
-<code>/recent tesla.com</code>
+<b>⚙️ Monitoring Control:</b>
+<code>/startmon</code> - Start automatic monitoring
+<code>/stopmon</code> - Stop automatic monitoring
+<code>/status</code> - Check bot and monitoring status
+<code>/config</code> - Show current configuration
 
-🔔 <b>Notifications:</b>
-You'll receive real-time alerts when new subdomains are discovered!
+<b>📱 Usage Examples:</b>
+<code>/add google.com</code>
+<code>/scan facebook.com</code>
+<code>/stats tesla.com</code>
+<code>/recent example.org</code>
+
+<b>🔔 About Notifications:</b>
+• Real-time alerts when new subdomains are discovered
+• Scan summaries with statistics
+• Error notifications for failed scans
+• Detailed subdomain information including IP addresses
+
+<b>💡 Tips:</b>
+• Use domain names without http:// or https://
+• Monitoring checks domains every 5 minutes by default
+• Add multiple domains for comprehensive monitoring
+• Use <code>/status</code> to check if monitoring is active
+
+<b>🆘 Need Help?</b>
+Send any command to see available options or contact support.
         """
         
         return await self.send_message(message)

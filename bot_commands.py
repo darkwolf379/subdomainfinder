@@ -79,23 +79,43 @@ class TelegramCommandHandler:
                 logging.error(f"Error handling command {command}: {e}")
                 await self.notifier.send_message(f"❌ Error executing command: {str(e)}")
         else:
-            await self.notifier.send_message(
-                f"❓ Unknown command: {command}\n"
-                f"Use /help to see available commands."
-            )
+            # Enhanced error message with command suggestions
+            error_message = f"❌ Unknown command: <code>{command}</code>\n\n"
+            error_message += "📋 <b>Available commands:</b>\n"
+            error_message += "• <code>/help</code> - Show all commands\n"
+            error_message += "• <code>/add domain.com</code> - Add domain to monitor\n"
+            error_message += "• <code>/scan domain.com</code> - Scan domain once\n"
+            error_message += "• <code>/list</code> - List monitored domains\n"
+            error_message += "• <code>/startmon</code> - Start monitoring\n"
+            error_message += "• <code>/status</code> - Check bot status\n\n"
+            error_message += "💡 <b>Tip:</b> Use <code>/help</code> for complete command list"
+            
+            await self.notifier.send_message(error_message)
     
     async def _handle_start(self, args: List[str]):
         """Handle /start command"""
         message = """🚀 <b>Welcome to Advanced Subdomain Monitor!</b>
 
-🔍 This bot monitors domains for new subdomains using crt.sh API and provides real-time notifications.
+🔍 <b>What I can do:</b>
+• Monitor domains for new subdomains using crt.sh API
+• Send real-time notifications when subdomains are discovered
+• Provide detailed statistics and scan history
+• Track IP addresses and certificate information
 
-<b>Quick Start:</b>
-1. Add a domain: <code>/add example.com</code>
-2. Start monitoring: <code>/startmon</code>
-3. Get notifications when new subdomains are found!
+🌟 <b>Quick Start Guide:</b>
+1. <code>/add example.com</code> - Add your first domain
+2. <code>/startmon</code> - Start automatic monitoring
+3. <code>/status</code> - Check monitoring status
+4. Get notified when new subdomains are found! 🎯
 
-Use /help for all available commands.
+📚 <b>Learn More:</b>
+• <code>/help</code> - See all available commands
+• <code>/config</code> - View current settings
+• <code>/list</code> - See monitored domains
+
+💡 <b>Pro Tip:</b> You can monitor multiple domains simultaneously for comprehensive security coverage!
+
+Ready to start discovering subdomains? Type <code>/help</code> to see all commands! 🚀
         """
         await self.notifier.send_message(message)
     
